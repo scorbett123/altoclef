@@ -2,8 +2,13 @@ package adris.altoclef.util;
 
 import adris.altoclef.Debug;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.ShapedRecipe;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class CraftingRecipe {
 
@@ -17,44 +22,41 @@ public class CraftingRecipe {
 
     private int _outputCount;
 
+    private Recipe _baseRecipe;
+
     // Every item in this list MUST match.
     // Used for beds where the wood can be anything
     // but the wool MUST be the same color.
     //private final Set<Integer> _mustMatch = new HashSet<>();
 
-    private CraftingRecipe() {
+    private CraftingRecipe(Recipe _baseRecipe) {
     }
 
-    public static CraftingRecipe newShapedRecipe(Item[][] items, int outputCount) {
-        return newShapedRecipe(null, items, outputCount);
-    }
-
-    public static CraftingRecipe newShapedRecipe(ItemTarget[] slots, int outputCount) {
-        return newShapedRecipe(null, slots, outputCount);
-    }
-
-    public static CraftingRecipe newShapedRecipe(String shortName, Item[][] items, int outputCount) {
-        return newShapedRecipe(shortName, createSlots(items), outputCount);
-    }
-
-    public static CraftingRecipe newShapedRecipe(String shortName, ItemTarget[] slots, int outputCount) {
-        if (slots.length != 4 && slots.length != 9) {
-            Debug.logError("Invalid shaped crafting recipe, must be either size 4 or 9. Size given: " + slots.length);
-            return null;
+    public static CraftingRecipe createCraftingRecipe(Recipe baseRecipe) {
+        if (baseRecipe instanceof ShapedRecipe) {
+            return newShapedRecipe(baseRecipe);
         }
+        return null;
+    }
 
-        CraftingRecipe result = new CraftingRecipe();
-        result._shortName = shortName;
-        result._slots = slots;
-        result._outputCount = outputCount;
-        if (slots.length == 4) {
-            result._width = 2;
-            result._height = 2;
-        } else {
-            result._width = 3;
-            result._height = 3;
-        }
+    public static CraftingRecipe newShapedRecipe(Recipe baseRecipe) {
+
+        CraftingRecipe result = new CraftingRecipe(baseRecipe);
+        result._shortName = baseRecipe.getOutput().getName().getString();
+        result._outputCount = baseRecipe.getOutput().getCount();
+
         result._shapeless = false;
+
+        ShapedRecipe recipe = (ShapedRecipe) baseRecipe;
+        result._width = recipe.getWidth();
+        result._height = recipe.getHeight();
+
+        result._slots = new ItemTarget[recipe.getIngredients().size()];
+        int i = 0;
+        for (Ingredient ingredient : recipe.getIngredients()) {
+            result._slots[i] = new ItemTarget( (Item[]) Arrays.stream(ingredient.getMatchingStacks()).map(ItemStack::getItem).toArray(), 1);
+            i++;
+        }
 
         return result;
     }
@@ -104,6 +106,10 @@ public class CraftingRecipe {
 
     public int outputCount() {
         return _outputCount;
+    }
+
+    public Recipe getBaseRecipe() {
+        return _baseRecipe;
     }
 
     @Override

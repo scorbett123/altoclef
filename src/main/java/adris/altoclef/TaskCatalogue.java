@@ -10,10 +10,14 @@ import adris.altoclef.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MapColor;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.ShapedRecipe;
 import net.minecraft.util.DyeColor;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -40,6 +44,14 @@ public class TaskCatalogue {
     static {
         /// DEFINE RESOURCE TASKS HERE
         {
+            for (Recipe recipe: MinecraftClient.getInstance().world.getRecipeManager().values()) {
+                System.out.println(recipe.getType().toString());
+                System.out.println(recipe.getOutput().getName());
+                System.out.println(recipe.fits(2,2));
+                for (Object ingredient: recipe.getIngredients())
+                System.out.print(Arrays.toString(Arrays.stream(((Ingredient) ingredient).getMatchingStacks()).map(i -> i.getName().getString()).toArray()) + "   ");
+
+            }
             String p = "planks";
             String s = "stick";
             String o = null;
@@ -724,47 +736,6 @@ public class TaskCatalogue {
         return shear(name, new Block[]{toShear}, targets);
     }
 
-    private static CataloguedResource shapedRecipe2x2(String name, Item[] matches, int outputCount, String s0, String s1, String s2, String s3) {
-        CraftingRecipe recipe = CraftingRecipe.newShapedRecipe(name, new ItemTarget[]{t(s0), t(s1), t(s2), t(s3)}, outputCount);
-        return put(name, matches, count -> new CraftInInventoryTask(new ItemTarget(matches, count), recipe));
-    }
-
-    private static CataloguedResource shapedRecipe3x3(String name, Item[] matches, int outputCount, String s0, String s1, String s2, String s3, String s4, String s5, String s6, String s7, String s8) {
-        CraftingRecipe recipe = CraftingRecipe.newShapedRecipe(name, new ItemTarget[]{t(s0), t(s1), t(s2), t(s3), t(s4), t(s5), t(s6), t(s7), t(s8)}, outputCount);
-        return put(name, matches, count -> new CraftInTableTask(new ItemTarget(matches, count), recipe));
-    }
-
-    private static CataloguedResource shapedRecipe2x2(String name, Item match, int craftCount, String s0, String s1, String s2, String s3) {
-        return shapedRecipe2x2(name, new Item[]{match}, craftCount, s0, s1, s2, s3);
-    }
-
-    private static CataloguedResource shapedRecipe2x2Block(String name, Item match, String material) {
-        return shapedRecipe2x2(name, match, 1, material, material, material, material);
-    }
-
-    private static CataloguedResource shapedRecipe2x2Block(String name, Item match, int outputCount, String material) {
-        return shapedRecipe2x2(name, match, outputCount, material, material, material, material);
-    }
-
-    private static CataloguedResource shapedRecipe3x3(String name, Item match, int craftCount, String s0, String s1, String s2, String s3, String s4, String s5, String s6, String s7, String s8) {
-        return shapedRecipe3x3(name, new Item[]{match}, craftCount, s0, s1, s2, s3, s4, s5, s6, s7, s8);
-    }
-
-    private static CataloguedResource shapedRecipe3x3Block(String name, Item match, String material) {
-        return shapedRecipe3x3(name, match, 1, material, material, material, material, material, material, material, material, material);
-    }
-
-    private static CataloguedResource shapedRecipeSlab(String name, Item match, String material) {
-        return shapedRecipe3x3(name, match, 6, null, null, null, null, null, null, material, material, material);
-    }
-
-    private static CataloguedResource shapedRecipeStairs(String name, Item match, String material) {
-        return shapedRecipe3x3(name, match, 4, material, null, null, material, material, null, material, material, material);
-    }
-
-    private static CataloguedResource shapedRecipeWall(String name, Item match, String material) {
-        return shapedRecipe3x3(name, match, 6, material, material, material, material, material, material, null, null, null);
-    }
 
     private static CataloguedResource smelt(String name, Item[] matches, String materials) {
         return put(name, matches, count -> new SmeltInFurnaceTask(new SmeltTarget(new ItemTarget(matches, count), new ItemTarget(materials, count))));

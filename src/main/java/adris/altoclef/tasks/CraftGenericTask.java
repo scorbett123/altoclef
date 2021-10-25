@@ -11,8 +11,10 @@ import adris.altoclef.util.csharpisbetter.TimerGame;
 import adris.altoclef.util.slots.CraftingTableSlot;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.recipe.Recipe;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
@@ -24,10 +26,10 @@ import net.minecraft.screen.slot.SlotActionType;
  */
 public class CraftGenericTask extends Task {
 
-    private final CraftingRecipe _recipe;
+    private final Recipe _recipe;
     private TimerGame _invTimer;
 
-    public CraftGenericTask(CraftingRecipe recipe) {
+    public CraftGenericTask(Recipe recipe) {
         _recipe = recipe;
     }
 
@@ -65,32 +67,14 @@ public class CraftGenericTask extends Task {
             }
         }
 
-        // For each slot in table
-        for (int craftSlot = 0; craftSlot < _recipe.getSlotCount(); ++craftSlot) {
-            ItemTarget toFill = _recipe.getSlot(craftSlot);
-            Slot currentCraftSlot;
-            if (bigCrafting) {
-                // Craft in table
-                currentCraftSlot = CraftingTableSlot.getInputSlot(craftSlot, _recipe.isBig());
-            } else {
-                // Craft in window
-                currentCraftSlot = PlayerSlot.getCraftInputSlot(craftSlot);
-            }
-            ItemStack present = mod.getInventoryTracker().getItemStackInSlot(currentCraftSlot);
-            if (toFill == null || toFill.isEmpty()) {
-                if (present.getItem() != Items.AIR) {
-                    // Move this item OUT if it should be empty
-                    return new ThrowSlotTask(currentCraftSlot);
-                }
-            } else {
-                boolean isSatisfied = toFill.matches(present.getItem());
-                if (!isSatisfied) {
-                    return new MoveItemToSlotTask(new ItemTarget(toFill, 1), currentCraftSlot);
-                }
-            }
-        }
 
         Slot outputSlot = bigCrafting ? CraftingTableSlot.OUTPUT_SLOT : PlayerSlot.CRAFT_OUTPUT_SLOT;
+
+        if (!mod.getInventoryTracker().getItemStackInSlot(outputSlot).isEmpty()) {
+            int syncId = mod.getPlayer().currentScreenHandler.syncId;
+            MinecraftClient.getInstance().interactionManager.clickRecipe(syncId, _recipe, false);
+            return null;
+        }
 
         return new ClickSlotTask(outputSlot, 0, SlotActionType.QUICK_MOVE);
     }

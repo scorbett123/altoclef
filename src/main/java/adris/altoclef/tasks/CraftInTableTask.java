@@ -205,7 +205,7 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
                 return new EnsureFreeInventorySlotTask();
             }
             setDebugState("Crafting");
-            return new CraftGenericTask(target.getRecipe());
+            return new CraftGenericTask(target.getRecipe().getBaseRecipe());
         }
 
         return null;
